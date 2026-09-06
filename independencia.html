@@ -161,7 +161,7 @@ header.top .sub{text-align:center;margin-left:auto;margin-right:auto;}
 
     <div class="metrics">
       <div class="metric"><div class="t">Investindo por mês</div><div class="n num" id="r_aporte">—</div></div>
-      <div class="metric"><div class="t">Ou tudo de uma vez hoje</div><div class="n num" id="r_lump">—</div></div>
+      <div class="metric"><div class="t">Ou um único depósito hoje, sem mais aportes</div><div class="n num" id="r_lump">—</div></div>
       <div class="metric"><div class="t">Taxa real líquida</div><div class="n num" id="r_taxa">—</div></div>
     </div>
 
@@ -250,7 +250,8 @@ function compute(){
   $('verdict').innerHTML=
     `Para receber <b>${BRL(renda)}</b> por mês para sempre, você precisa juntar <b>${BRL(capital)}</b>. `+
     `Investindo <b>${BRL(aporte)}</b> por mês durante <b>${anosPrazo} ${anosPrazo==1?'ano':'anos'}</b>, você chega lá. `+
-    `Desse total, <span class="hl">${BRL(juros)}</span> vêm sozinhos do trabalho dos juros, ou seja, <span class="hl">${pctJuros}%</span> do caminho o dinheiro faz por você.`;
+    `Desse total, <span class="hl">${BRL(juros)}</span> vêm sozinhos do trabalho dos juros, ou seja, <span class="hl">${pctJuros}%</span> do caminho o dinheiro faz por você. `+
+    `Se preferir não aportar todo mês, um único depósito de <b>${BRL(lump)}</b> hoje, sem mexer mais nele, também chega no mesmo capital em ${anosPrazo} ${anosPrazo==1?'ano':'anos'}.`;
 }
 
 function setEmpty(){
