@@ -40,7 +40,7 @@ h1 em{font-style:normal;color:#E7B968;}
 .big{padding:2px 0 4px;}.big .k{font-size:12px;color:var(--muted);}
 .big .v{font-family:"Archivo",sans-serif;font-weight:800;font-size:clamp(28px,7.5vw,42px);letter-spacing:-.02em;line-height:1.04;margin-top:2px;color:var(--petrol);}
 .big .subv{font-size:13px;color:var(--ink-soft);font-family:"IBM Plex Mono",monospace;margin-top:4px;}
-.metrics{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:14px 0 4px;}
+.metrics{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0 4px;}
 .metric{border:1px solid var(--line);border-radius:11px;padding:11px 12px;background:#fff;}
 .metric .t{font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-family:"IBM Plex Mono",monospace;}
 .metric .n{font-family:"Archivo",sans-serif;font-weight:700;font-size:17px;margin-top:3px;color:var(--ink);}
@@ -152,6 +152,7 @@ footer{margin-top:26px;padding-top:14px;border-top:1px solid var(--line);color:v
       <div class="metric"><div class="t">Preço do bem nesse mês</div><div class="n num" id="r_preco">—</div></div>
       <div class="metric"><div class="t">Aluguel pago até lá</div><div class="n num" id="r_aluguel">—</div></div>
       <div class="metric"><div class="t">Juros que o financiamento cobraria</div><div class="n num" id="r_juros">—</div></div>
+      <div class="metric"><div class="t">Parcela, se financiasse</div><div class="n num" id="r_parcela">—</div></div>
     </div>
     <div class="verdict" id="verdict">Preencha os campos para ver o resultado.</div>
     <div class="chartwrap"><div id="chart"></div>
@@ -245,6 +246,7 @@ function compute(){
   $('r_preco').textContent=BRL(precoM);
   $('r_aluguel').textContent=BRL(aluguelTotal);
   $('r_juros').textContent = (taxa>0&&prazo>0)?BRL(juros):'—';
+  $('r_parcela').textContent = (taxa>0&&prazo>0)?BRL(parcela):'—';
   $('chart').innerHTML=svgChart(invPts,prcPts,M);
 
   let msg=`Investindo do seu jeito, você junta para comprar o bem à vista em <span class="hl">${M} meses</span>${anos>0?' ('+anos+(anos===1?' ano':' anos')+(meses>0?' e '+meses+' m':'')+')':''}. Nesse mês o bem custa <b>${BRL(precoM)}</b> e você terá pago <b>${BRL(aluguelTotal)}</b> de aluguel.`;
@@ -258,7 +260,7 @@ function compute(){
   $('verdict').innerHTML=msg;
 }
 
-function setEmpty(){['r_prazo','r_preco','r_aluguel','r_juros'].forEach(id=>$(id).textContent='—');$('r_prazoSub').textContent='';$('warnbox').innerHTML='';$('chart').innerHTML='';}
+function setEmpty(){['r_prazo','r_preco','r_aluguel','r_juros','r_parcela'].forEach(id=>$(id).textContent='—');$('r_prazoSub').textContent='';$('warnbox').innerHTML='';$('chart').innerHTML='';}
 
 function svgChart(inv,prc,M){
   const W=680,H=280,padL=60,padR=14,padT=14,padB=28;const plotW=W-padL-padR,plotH=H-padT-padB;

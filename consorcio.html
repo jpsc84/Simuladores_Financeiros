@@ -181,9 +181,9 @@ function compute(){
   if(taxaFin>0){
     const im=Math.pow(1+taxaFin/100,1/12)-1; const p=pmt(im,n,carta); const jurosFin=p*n-carta;
     if(jurosFin>alem){
-      msg+=` Financiar o mesmo valor a ${taxaFin.toLocaleString('pt-BR')}% ao ano custaria <b>${BRL(jurosFin)}</b> em juros, então o consórcio sai <span class="hl">${BRL(jurosFin-alem)}</span> mais barato, ao custo de esperar a contemplação.`;
+      msg+=` Financiar o mesmo valor a ${taxaFin.toLocaleString('pt-BR')}% ao ano custaria <b>${BRL(jurosFin)}</b> em juros, com parcela de ${BRLc(p)}/mês, então o consórcio sai <span class="hl">${BRL(jurosFin-alem)}</span> mais barato, ao custo de esperar a contemplação.`;
     } else {
-      msg+=` Financiar o mesmo valor a ${taxaFin.toLocaleString('pt-BR')}% ao ano custaria <b>${BRL(jurosFin)}</b> em juros, menos que o consórcio, e ainda entrega o bem na hora.`;
+      msg+=` Financiar o mesmo valor a ${taxaFin.toLocaleString('pt-BR')}% ao ano custaria <b>${BRL(jurosFin)}</b> em juros, com parcela de ${BRLc(p)}/mês, menos que o consórcio, e ainda entrega o bem na hora.`;
     }
   }
   $('verdict').innerHTML=msg;

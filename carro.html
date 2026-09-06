@@ -201,8 +201,8 @@ header.top .sub{text-align:center;margin-left:auto;margin-right:auto;}
   <p class="note">Este é o custo total de ter cada carro no período que você escolheu. Ele soma duas coisas que quase ninguém junta: o quanto o carro perde de valor e o quanto você gasta para usá-lo. O menor número embaixo de cada carro é o custo por mês e por quilômetro.</p>
   <div class="result">
     <div class="headline">
-      <div class="big a"><div class="k" id="r_na">Veículo A</div><div class="v num" id="r_ta">—</div><div class="permo num" id="r_ma">—</div></div>
-      <div class="big b"><div class="k" id="r_nb">Veículo B</div><div class="v num" id="r_tb">—</div><div class="permo num" id="r_mb">—</div></div>
+      <div class="big a"><div class="k" id="r_na">Veículo A</div><div class="v num" id="r_ta">—</div><div class="permo num" id="r_ma">—</div><div class="permo num" id="r_pa" style="display:none"></div></div>
+      <div class="big b"><div class="k" id="r_nb">Veículo B</div><div class="v num" id="r_tb">—</div><div class="permo num" id="r_mb">—</div><div class="permo num" id="r_pb" style="display:none"></div></div>
     </div>
     <div class="verdict" id="verdict">Preencha os campos para ver o veredito.</div>
 
@@ -560,13 +560,13 @@ function calcCar(k){
   const financiado=Math.max(0, preco-entrada);
 
   // juros
-  let juros=0;
+  let juros=0, parcela=0, parcelaSac=false;
   if(c.pago==='financiado' && financiado>0){
     const im=Math.pow(1+(c.taxa||0)/100,1/12)-1;
     const n=c.prazo||1;
     let totalPago;
-    if(c.sistema==='sac'){ totalPago=financiado*(1+im*(n+1)/2); }
-    else { totalPago=pmt(im,n,financiado)*n; }
+    if(c.sistema==='sac'){ totalPago=financiado*(1+im*(n+1)/2); parcela=financiado/n+financiado*im; parcelaSac=true; }
+    else { parcela=pmt(im,n,financiado); totalPago=parcela*n; }
     juros=Math.max(0,totalPago-financiado);
   }
 
@@ -598,7 +598,7 @@ function calcCar(k){
 
   return {total, perdaPatrim, custoUso, deprec, juros, empl, combust, seguro, manut, ipva,
     valorFinal, dRate, mes: total/meses, km: kmTot>0?total/kmTot:0,
-    usoAno: custoUso/anos};
+    usoAno: custoUso/anos, parcela, parcelaSac, financiado: c.pago==='financiado'};
 }
 
 function barSeg(cls,val,total){ const pct=total>0?(val/total*100):0; return val>0?`<span class="${cls}" style="width:${pct}%"></span>`:''; }
@@ -622,11 +622,15 @@ function premissasOk(){
 }
 
 function fillCol(k,r){
-  const T=$('r_t'+k), M=$('r_m'+k), CT=$('c_t'+k);
-  if(!r){ T.textContent='—'; M.textContent=''; CT.textContent=''; $('bar_'+k).innerHTML=''; $('split_'+k).innerHTML=''; return; }
+  const T=$('r_t'+k), M=$('r_m'+k), CT=$('c_t'+k), P=$('r_p'+k);
+  if(!r){ T.textContent='—'; M.textContent=''; CT.textContent=''; $('bar_'+k).innerHTML=''; $('split_'+k).innerHTML=''; P.style.display='none'; return; }
   T.textContent=BRL(r.total);
   M.textContent=BRL2(r.mes)+'/mês · '+BRL2(r.km)+'/km';
   CT.textContent=BRL(r.total);
+  if(r.financiado && r.parcela>0){
+    P.style.display='';
+    P.textContent = 'Parcela: '+BRL2(r.parcela)+(r.parcelaSac?'/mês inicial (SAC, cai)':'/mês fixa');
+  } else { P.style.display='none'; }
   renderBar('bar_'+k,r); renderSplit('split_'+k,r);
 }
 
