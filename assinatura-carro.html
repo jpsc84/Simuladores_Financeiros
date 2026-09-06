@@ -47,6 +47,15 @@ h1 em{font-style:normal;color:#E7B968;}
 .verdict{background:var(--ink);color:#EAF1EE;border-radius:12px;padding:14px 15px;margin:14px 0;font-size:14.5px;line-height:1.5;}
 .verdict b{color:#fff;}.verdict .hl{color:#E9C77E;}
 .barwrap{margin:14px 0 2px;}.barwrap h4{font-family:"Archivo",sans-serif;font-weight:700;font-size:13.5px;margin:8px 0 6px;color:var(--ink-soft);}
+.bal{border:1px solid var(--line);border-radius:12px;background:#fff;padding:2px 14px;margin:14px 0;}
+.bal .r{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);font-size:13.5px;}
+.bal .r:last-child{border-bottom:none;}.bal .r .lab{color:var(--ink-soft);}.bal .r .lab small{color:var(--muted);font-family:"IBM Plex Mono",monospace;font-size:11px;}
+.bal .r .v{font-family:"IBM Plex Mono",monospace;font-weight:600;white-space:nowrap;}
+.bal .pos .v{color:var(--clay);}.bal .neg .v{color:var(--sage);}
+.bal .tot .lab{color:var(--ink);font-weight:700;}.bal .tot .v{font-family:"Archivo",sans-serif;font-size:18px;}
+.bal h5{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--brass);margin:12px 0 2px;}
+.bal h5:first-child{margin-top:10px}
+.livecalc{font-size:11.5px;color:var(--muted);font-family:"IBM Plex Mono",monospace;margin-top:-6px;}
 .bar2{display:grid;gap:8px;}
 .brow{display:grid;grid-template-columns:84px 1fr auto;align-items:center;gap:10px;}
 .brow .lab{font-size:12.5px;color:var(--ink-soft);font-family:"IBM Plex Mono",monospace;}
@@ -85,7 +94,8 @@ footer{margin-top:26px;padding-top:14px;border-top:1px solid var(--line);color:v
       <div class="field"><label>Valor do carro (tabela ou 0km)</label>
         <div class="affix"><input class="num" id="valorCarro" type="number" min="0" step="1000" value="" placeholder="ex: 90000"><span class="u">R$</span></div></div>
       <div class="field"><label>Horizonte de uso</label>
-        <div class="affix"><input class="num" id="horizonte" type="number" min="1" step="1" value="" placeholder="ex: 36"><span class="u">meses</span></div></div>
+        <div class="affix"><input class="num" id="horizonte" type="number" min="1" step="1" value="" placeholder="ex: 36"><span class="u">meses</span></div>
+        <div class="hint">não precisa ser igual ao prazo do financiamento: se você pretende revender o carro antes de quitar, ou continuar usando depois de quitado, ponha um valor diferente. A conta ajusta sozinha</div></div>
     </div>
     <div class="field"><label>Depreciação do carro</label>
       <div class="affix"><input class="num" id="depAnual" type="number" min="0" step="0.5" value="" placeholder="ex: 15"><span class="u">% a.a.</span></div>
@@ -105,7 +115,8 @@ footer{margin-top:26px;padding-top:14px;border-top:1px solid var(--line);color:v
       <div class="field"><label>Entrada</label>
         <div class="affix"><input class="num" id="entrada" type="number" min="0" step="1000" value="" placeholder="ex: 0"><span class="u">R$</span></div></div>
       <div class="field"><label>Prazo do financiamento</label>
-        <div class="affix"><input class="num" id="prazoFin" type="number" min="1" step="1" value="" placeholder="ex: 48"><span class="u">meses</span></div></div>
+        <div class="affix"><input class="num" id="prazoFin" type="number" min="1" step="1" value="" placeholder="ex: 48"><span class="u">meses</span></div>
+        <div class="hint"><a href="#" id="copyPrazo" style="color:var(--sage);font-weight:600;text-decoration:none">usar este valor também no horizonte de uso →</a></div></div>
     </div>
     <div class="row2">
       <div class="field"><label>Taxa de juros</label>
@@ -117,12 +128,15 @@ footer{margin-top:26px;padding-top:14px;border-top:1px solid var(--line);color:v
       <div class="seg" id="seg-sistema"><button data-v="price" class="on">PRICE</button><button data-v="sac">SAC</button></div></div>
 
     <div class="subhead">Custos que a assinatura já inclui, e o financiamento não</div>
+    <p class="note" style="margin:-4px 0 10px">Seguro e IPVA se repetem todo ano em que você tem o carro. Se o horizonte é de 3 anos, o valor que você digitar aqui entra <b>3 vezes</b> na conta, uma para cada ano, não uma vez só.</p>
     <div class="row2">
-      <div class="field"><label>Seguro</label>
+      <div class="field"><label>Seguro (todo ano que tiver o carro)</label>
         <div class="affix"><input class="num" id="seguro" type="number" min="0" step="100" value="" placeholder="ex: 3600"><span class="u">R$/ano</span></div></div>
       <div class="field"><label>IPVA</label>
-        <div class="affix"><input class="num" id="ipva" type="number" min="0" step="100" value="" placeholder="ex: 2700"><span class="u">R$/ano</span></div></div>
+        <div class="affix"><input class="num" id="ipva" type="number" min="0" step="100" value="" placeholder="ex: 2700"><span class="u">R$/ano</span></div>
+        <div class="hint">também anual, também se repete</div></div>
     </div>
+    <div class="livecalc" id="livecalc"></div>
     <div class="field"><label>Manutenção preventiva</label>
       <div class="affix"><input class="num" id="manut" type="number" min="0" step="50" value="" placeholder="ex: 150"><span class="u">R$/mês</span></div>
       <div class="hint">revisões, troca de óleo e itens de desgaste, em média por mês</div></div>
@@ -137,6 +151,21 @@ footer{margin-top:26px;padding-top:14px;border-top:1px solid var(--line);color:v
       <div class="metric"><div class="t">Patrimônio no fim (financiando)</div><div class="n num" id="m_patrim">—</div></div>
     </div>
     <div class="verdict" id="verdict">Preencha os campos para ver o resultado.</div>
+
+    <div class="bal" id="balbox" style="display:none">
+      <h5>Financiando, de onde vem o custo líquido</h5>
+      <div class="r"><span class="lab">Entrada</span><span class="v num" id="b_entrada">—</span></div>
+      <div class="r pos"><span class="lab">+ Parcelas pagas <small id="b_parclabel"></small></span><span class="v num" id="b_parcelas">—</span></div>
+      <div class="r pos"><span class="lab">+ Seguro <small id="b_seglabel"></small></span><span class="v num" id="b_seguro">—</span></div>
+      <div class="r pos"><span class="lab">+ IPVA <small id="b_ipvalabel"></small></span><span class="v num" id="b_ipva">—</span></div>
+      <div class="r pos"><span class="lab">+ Manutenção <small id="b_manutlabel"></small></span><span class="v num" id="b_manut">—</span></div>
+      <div class="r"><span class="lab">= Total desembolsado</span><span class="v num" id="b_desembolso">—</span></div>
+      <h5>O que fica de patrimônio</h5>
+      <div class="r"><span class="lab">Valor de revenda do carro no fim</span><span class="v num" id="b_residual">—</span></div>
+      <div class="r pos" id="b_saldoRow" style="display:none"><span class="lab">− Saldo devedor restante</span><span class="v num" id="b_saldo">—</span></div>
+      <div class="r"><span class="lab">= Patrimônio no fim</span><span class="v num" id="b_patrim">—</span></div>
+      <div class="r tot"><span class="lab">Custo líquido financiando</span><span class="v num" id="b_final">—</span></div>
+    </div>
     <div class="barwrap">
       <h4>Custo líquido no horizonte, lado a lado</h4>
       <div class="bar2">
@@ -149,7 +178,9 @@ footer{margin-top:26px;padding-top:14px;border-top:1px solid var(--line);color:v
   <div class="eyebrow">Como ler o resultado</div>
   <div class="card">
     <ul class="read">
-      <li>O custo líquido do financiamento é tudo que saiu do seu bolso, entrada, parcelas, seguro, IPVA e manutenção, menos o patrimônio que sobra: o valor de revenda do carro já depreciado, descontado o saldo devedor que ainda restar se o horizonte terminar antes do financiamento.</li>
+      <li>O custo líquido do financiamento é tudo que saiu do seu bolso, entrada, parcelas, seguro, IPVA e manutenção, menos o patrimônio que sobra: o valor de revenda do carro já depreciado, descontado o saldo devedor que ainda restar se o horizonte terminar antes do financiamento. O extrato logo acima do resultado mostra cada uma dessas linhas separada, para nada ficar escondido dentro de uma conta só.</li>
+      <li>Seguro e IPVA são anuais e se repetem todo ano que você tiver o carro: num horizonte de 3 anos, o valor que você digita entra 3 vezes na conta, não uma vez só. A nota logo abaixo dos campos já mostra esse total somado antes mesmo de calcular o resultado.</li>
+      <li>Horizonte de uso e prazo do financiamento não precisam ser o mesmo número. Financiar em 60 meses mas revender o carro aos 36 é comum, e nesse caso a ferramenta desconta do patrimônio o saldo que ainda restar devendo. Se o horizonte passar do prazo, o carro já está quitado e só rodam os custos paralelos. Use valores diferentes de propósito se for esse o seu plano.</li>
       <li>Na assinatura o custo líquido é só a soma das mensalidades, porque no fim você devolve o carro e não fica com nada, mas também não teve entrada, nem burocracia de venda, nem risco de manutenção acima da média.</li>
       <li>Combustível fica de fora da conta de propósito: é o mesmo carro, o mesmo uso, então o gasto com combustível é igual nos dois cenários e não muda a decisão.</li>
       <li>A assinatura costuma ter franquia de km e multa por cancelamento antecipado, e o financiamento tem menos flexibilidade para trocar de carro no meio do caminho. São diferenças reais que este número não captura, pese elas também.</li>
@@ -185,6 +216,16 @@ function simulaFinanciamento(pv,i,n,sistema,H){
   return {pago, saldo:Math.max(0,saldo)};
 }
 
+function anos(H){ const a=H/12; return a===1?'1 ano':(Number.isInteger(a)?a+' anos':a.toFixed(1).replace('.',',')+' anos'); }
+
+function liveCalc(){
+  const H=val('horizonte'), seguro=val('seguro')||0, ipva=val('ipva')||0;
+  const el=$('livecalc');
+  if(!H || (seguro<=0 && ipva<=0)){ el.textContent=''; return; }
+  const total=(seguro+ipva)*(H/12);
+  el.textContent = `= ${BRL(total)} somados ao longo de ${anos(H)} (${BRL(seguro+ipva)}/ano × ${anos(H)})`;
+}
+
 function compute(){
   const valorCarro=val('valorCarro'), H=val('horizonte'), depAnual=val('depAnual')||0;
   const mensalidade=val('mensalidade');
@@ -198,7 +239,8 @@ function compute(){
   const financiado = Math.max(0, valorCarro-entrada);
   const {pago, saldo} = simulaFinanciamento(financiado, i, prazoFin, state.sistema, H);
 
-  const custosParalelos = (seguro/12 + ipva/12 + manut) * H;
+  const custoSeguro = seguro*(H/12), custoIpva = ipva*(H/12), custoManut = manut*H;
+  const custosParalelos = custoSeguro + custoIpva + custoManut;
   const desembolsoFin = entrada + pago + custosParalelos;
   const valorResidual = valorCarro * Math.pow(1-depAnual/100, H/12);
   const patrimonioFin = Math.max(0, valorResidual - saldo);
@@ -211,6 +253,24 @@ function compute(){
   $('m_fin').textContent=BRL(custoLiquidoFin);
   $('m_patrim').textContent=BRL(patrimonioFin);
 
+  // extrato linha a linha
+  $('balbox').style.display='';
+  $('b_entrada').textContent=BRL(entrada);
+  $('b_parclabel').textContent=`(${Math.min(H,prazoFin)}x)`;
+  $('b_parcelas').textContent=BRL(pago);
+  $('b_seglabel').textContent=`(${anos(H)})`;
+  $('b_seguro').textContent=BRL(custoSeguro);
+  $('b_ipvalabel').textContent=`(${anos(H)})`;
+  $('b_ipva').textContent=BRL(custoIpva);
+  $('b_manutlabel').textContent=`(${H}x)`;
+  $('b_manut').textContent=BRL(custoManut);
+  $('b_desembolso').textContent=BRL(desembolsoFin);
+  $('b_residual').textContent=BRL(valorResidual);
+  $('b_saldoRow').style.display = saldo>0.5 ? '' : 'none';
+  $('b_saldo').textContent=BRL(saldo);
+  $('b_patrim').textContent=BRL(patrimonioFin);
+  $('b_final').textContent=BRL(custoLiquidoFin);
+
   const maxV=Math.max(custoLiquidoAssin,custoLiquidoFin)||1;
   $('bar_a').style.width=(custoLiquidoAssin/maxV*100)+'%';
   $('bar_f').style.width=(custoLiquidoFin/maxV*100)+'%';
@@ -220,20 +280,27 @@ function compute(){
   const box=$('bigbox');
   if(diff>=0){
     box.className='big financiar'; $('r_k').textContent='Financiar sai mais barato'; $('r_diff').textContent=BRL(diff);
-    $('verdict').innerHTML=`No horizonte de ${H} meses, financiando você fica com um carro que vale <b>${BRL(valorResidual)}</b>${saldo>0?` (ainda devendo ${BRL(saldo)})`:``}, um patrimônio de <b>${BRL(patrimonioFin)}</b>. Descontando isso do que sai do bolso, o custo líquido do financiamento é <b>${BRL(custoLiquidoFin)}</b>, contra <b>${BRL(custoLiquidoAssin)}</b> assinando. Financiar sai <span class="hl">${BRL(diff)}</span> mais barato.`;
+    $('verdict').innerHTML=`No horizonte de ${anos(H)}, financiando você desembolsa <b>${BRL(desembolsoFin)}</b> ao todo, mas fica com um carro que vale <b>${BRL(valorResidual)}</b>${saldo>0.5?`, com ${BRL(saldo)} ainda devendo`:``}. Descontando esse patrimônio de <b>${BRL(patrimonioFin)}</b>, o custo líquido é <b>${BRL(custoLiquidoFin)}</b>, contra <b>${BRL(custoLiquidoAssin)}</b> assinando. Financiar sai <span class="hl">${BRL(diff)}</span> mais barato. Veja o extrato completo abaixo.`;
   } else {
     box.className='big assinar'; $('r_k').textContent='Assinar sai mais barato'; $('r_diff').textContent=BRL(-diff);
-    $('verdict').innerHTML=`Mesmo contando o carro que sobra no fim, valendo <b>${BRL(valorResidual)}</b>${saldo>0?` (com ${BRL(saldo)} ainda devendo)`:``}, o custo líquido do financiamento é <b>${BRL(custoLiquidoFin)}</b>, acima dos <b>${BRL(custoLiquidoAssin)}</b> da assinatura. Assinar sai <span class="hl">${BRL(-diff)}</span> mais barato, sem entrada e sem lidar com revenda.`;
+    $('verdict').innerHTML=`Mesmo contando o carro que sobra no fim, valendo <b>${BRL(valorResidual)}</b>${saldo>0.5?` (com ${BRL(saldo)} ainda devendo)`:``}, o custo líquido do financiamento é <b>${BRL(custoLiquidoFin)}</b>, acima dos <b>${BRL(custoLiquidoAssin)}</b> da assinatura. Assinar sai <span class="hl">${BRL(-diff)}</span> mais barato, sem entrada e sem lidar com revenda. Veja o extrato completo abaixo.`;
   }
 }
 function setEmpty(){
   ['m_assin','m_fin','m_patrim'].forEach(id=>$(id).textContent='—');
   $('r_diff').textContent='—'; $('bigbox').className='big';
   $('bar_a').style.width='0%'; $('bar_f').style.width='0%'; $('barv_a').textContent='—'; $('barv_f').textContent='—';
+  $('balbox').style.display='none';
 }
 document.querySelectorAll('.seg').forEach(seg=>{const key=seg.id==='seg-forma'?'forma':'sistema';seg.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{state[key]=b.dataset.v;seg.querySelectorAll('button').forEach(x=>x.classList.remove('on'));b.classList.add('on');compute();}));});
-document.querySelectorAll('input').forEach(el=>el.addEventListener('input',compute));
+document.querySelectorAll('input').forEach(el=>el.addEventListener('input',()=>{compute();liveCalc();}));
+liveCalc();
 compute();
+$('copyPrazo').addEventListener('click',e=>{
+  e.preventDefault();
+  const p=$('prazoFin').value;
+  if(p){ $('horizonte').value=p; compute(); liveCalc(); }
+});
 </script>
 </body>
 </html>
