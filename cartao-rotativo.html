@@ -88,16 +88,17 @@ footer{margin-top:26px;padding-top:14px;border-top:1px solid var(--line);color:v
     </div>
     <div class="row2">
       <div class="field"><label>% mínimo cobrado pelo cartão</label>
-        <div class="affix"><input class="num" id="minimoPct" type="number" min="1" max="100" step="1" value="15"><span class="u">%</span></div>
-        <div class="hint">costuma ficar entre 15% e 20% da fatura</div></div>
+        <div class="affix"><input class="num" id="minimoPct" type="number" min="1" max="100" step="1" value="" placeholder="ex: 15"><span class="u">%</span></div>
+        <div class="hint">costuma ficar entre 15% e 20% da fatura; define o cenário "só o mínimo" abaixo</div></div>
       <div class="field"><label>Quanto você vai pagar por mês</label>
         <div class="affix"><input class="num" id="pagamento" type="number" min="0" step="50" value="" placeholder="ex: 500"><span class="u">R$</span></div>
-        <div class="hint">o valor fixo que você pretende pagar todo mês, além do mínimo</div></div>
+        <div class="hint">o valor fixo que você pretende pagar; se ficar abaixo do mínimo, o cartão exige o mínimo mesmo assim</div></div>
     </div>
   </div>
 
   <div class="eyebrow">O mínimo contra o seu plano</div>
   <div class="card">
+    <p class="note">"Só o mínimo" usa o % mínimo que você informou acima, recalculado sobre o saldo de cada mês. "Seu plano" usa o valor fixo que você definiu em "quanto vai pagar por mês", nunca abaixo do mínimo exigido no momento.</p>
     <div class="cols2">
       <div class="colbox trap">
         <h4>Só o mínimo</h4>
@@ -126,7 +127,7 @@ footer{margin-top:26px;padding-top:14px;border-top:1px solid var(--line);color:v
       <li>O mínimo é calculado sobre o saldo de cada mês, então ele encolhe junto com a dívida, e o rotativo tem tempo de sobra para cobrar juros em cima do que sobrou. É por isso que pagar só o mínimo pode levar anos, mesmo com o teto legal.</li>
       <li>O teto de 100% impede a dívida de crescer para sempre, mas não impede ela de ficar travada num valor alto por muito tempo, cobrando o máximo permitido, até você pagar o suficiente para começar a reduzir de verdade.</li>
       <li>Qualquer valor fixo acima do mínimo já corta meses e reais de juros. Não precisa ser um valor gigante, precisa ser maior que o mínimo, e constante.</li>
-      <li>Se o valor do seu plano não for suficiente nem para cobrir os juros do primeiro mês, o saldo ainda vai crescer por um tempo antes de começar a cair; a ferramenta avisa quando isso acontece.</li>
+      <li>Você não consegue pagar menos que o mínimo do cartão, mesmo que planeje um valor menor; a simulação sempre usa o mínimo do momento como piso do seu plano. E se mesmo assim o pagamento não cobrir os juros do primeiro mês, o saldo cresce por um tempo antes de cair.</li>
     </ul>
   </div>
 
@@ -169,7 +170,8 @@ function compute(){
   const CAP=600; // 50 anos, teto de simulação
 
   const trap = simula(saldo0, taxaM, (saldoAtual)=>saldoAtual*minimoPct, CAP);
-  const plan = simula(saldo0, taxaM, ()=>pagamento, CAP);
+  const plan = simula(saldo0, taxaM, (saldoAtual)=>Math.max(pagamento, saldoAtual*minimoPct), CAP);
+  const pagamentoAbaixoDoMinimo = pagamento < saldo0*minimoPct;
 
   const fmtT = r => r.quitou ? (r.meses+(r.meses===1?' mês':' meses')) : `mais de ${CAP} meses`;
   $('r_trapTempo').textContent = fmtT(trap);
@@ -180,13 +182,14 @@ function compute(){
   $('chart').innerHTML = svgChart(trap.traj, plan.traj);
 
   let msg='';
+  const avisoMinimo = pagamentoAbaixoDoMinimo ? `<br><br>O valor que você definiu fica abaixo do mínimo cobrado no primeiro mês (${BRL(saldo0*minimoPct)}). O cartão vai exigir pelo menos isso, então a simulação já ajusta seu plano para nunca pagar menos que o mínimo do momento.` : '';
   if(!plan.quitou){
-    msg = `<span class="bad">Com ${BRL(pagamento)} por mês, a dívida não some em 50 anos de simulação.</span> Isso indica que o pagamento não cobre nem os juros do começo; aumente o valor mensal para sair do vermelho.`;
+    msg = `<span class="bad">Com ${BRL(pagamento)} por mês, a dívida não some em 50 anos de simulação.</span> Isso indica que o pagamento não cobre nem os juros do começo; aumente o valor mensal para sair do vermelho.${avisoMinimo}`;
   } else if(!trap.quitou){
-    msg = `Pagando só o mínimo, a dívida não se resolve nem em 50 anos de simulação, travada perto do teto legal. Com o seu plano de ${BRL(pagamento)} por mês, você quita em <b>${fmtT(plan)}</b>, pagando <span class="hl">${BRL(plan.juros)}</span> de juros. Qualquer valor fixo acima do mínimo já muda esse jogo por completo.`;
+    msg = `Pagando só o mínimo, a dívida não se resolve nem em 50 anos de simulação, travada perto do teto legal. Com o seu plano de ${BRL(pagamento)} por mês, você quita em <b>${fmtT(plan)}</b>, pagando <span class="hl">${BRL(plan.juros)}</span> de juros. Qualquer valor fixo acima do mínimo já muda esse jogo por completo.${avisoMinimo}`;
   } else {
     const economiaJuros = trap.juros-plan.juros, economiaMeses = trap.meses-plan.meses;
-    msg = `Só o mínimo leva <b>${fmtT(trap)}</b> e custa <b>${BRL(trap.juros)}</b> de juros. Pagando ${BRL(pagamento)} por mês, você quita em <b>${fmtT(plan)}</b>, economizando <span class="hl">${economiaMeses} meses</span> e <span class="hl">${BRL(economiaJuros)}</span> de juros.`;
+    msg = `Só o mínimo leva <b>${fmtT(trap)}</b> e custa <b>${BRL(trap.juros)}</b> de juros. Pagando ${BRL(pagamento)} por mês, você quita em <b>${fmtT(plan)}</b>, economizando <span class="hl">${economiaMeses} meses</span> e <span class="hl">${BRL(economiaJuros)}</span> de juros.${avisoMinimo}`;
   }
   $('verdict').innerHTML=msg;
 }

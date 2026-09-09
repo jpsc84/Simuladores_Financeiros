@@ -89,7 +89,7 @@ footer{margin-top:26px;padding-top:14px;border-top:1px solid var(--line);color:v
       <div class="field"><label>Horizonte de simulação</label>
         <div class="affix"><input class="num" id="horizonte" type="number" min="1" max="30" step="1" value="" placeholder="ex: 5"><span class="u">anos</span></div></div>
       <div class="field"><label>Rendimento do FGTS</label>
-        <div class="affix"><input class="num" id="rend" type="number" min="0" step="0.5" value="3" ><span class="u">% a.a.</span></div>
+        <div class="affix"><input class="num" id="rend" type="number" min="0" step="0.5" value="" placeholder="ex: 3"><span class="u">% a.a.</span></div>
         <div class="hint">TR + 3% ao ano; a TR costuma ficar perto de zero</div></div>
     </div>
   </div>
@@ -155,7 +155,7 @@ function faixaSaque(saldo){
 }
 
 function compute(){
-  const saldo0=val('saldo0')||0, deposito=val('deposito')||0, horizonte=val('horizonte'), rendAno=val('rend')||0;
+  const saldo0=val('saldo0')||0, deposito=val('deposito')||0, horizonte=val('horizonte'), rendAno=(val('rend')===null?3:val('rend'));
   const mesDemissao = state.demissao==='sim' ? val('mesDemissao') : null;
   const ready = horizonte>0 && (saldo0>0 || deposito>0) && (state.demissao==='nao' || mesDemissao>0);
   if(!ready){ setEmpty(); return; }
