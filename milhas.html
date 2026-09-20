@@ -66,6 +66,15 @@ footer{margin-top:26px;padding-top:14px;border-top:1px solid var(--line);color:v
 .finrow svg{width:24px;height:24px;flex:none;}
 .finrow .op{font-family:"IBM Plex Mono",monospace;font-size:18px;line-height:1;color:#E7B968;font-weight:600;}
 .hidden{display:none;}
+.stepper{display:flex;align-items:stretch;gap:8px;}
+.stepper input{text-align:center;font-size:18px;}
+.stepper button{flex:none;width:44px;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--ink);font-family:"IBM Plex Mono",monospace;font-size:18px;font-weight:600;cursor:pointer;}
+.stepper button:active{background:var(--card);}
+.chiprow{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:8px;}
+.chiprow button{border:1px solid var(--line);border-radius:20px;background:#fff;color:var(--ink-soft);font-family:"IBM Plex Mono",monospace;font-size:12.5px;padding:6px 12px;cursor:pointer;}
+.chiprow button.on{background:var(--ink);color:#fff;border-color:var(--ink);}
+.livecalc{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:2px 0 12px;font-size:13.5px;color:var(--ink-soft);text-align:center;}
+.livecalc b{color:var(--brass);font-family:"IBM Plex Mono",monospace;}
 </style>
 </head>
 <body>
@@ -122,7 +131,32 @@ footer{margin-top:26px;padding-top:14px;border-top:1px solid var(--line);color:v
     <p class="note">Escolha como vai gerar as milhas e preencha os números da promoção.</p>
     <div class="card">
       <div class="field"><label>Como você vai gerar as milhas</label>
-        <div class="seg" id="seg-buy"><button data-v="A" class="on">Transferência bonificada</button><button data-v="B">Pontos + dinheiro</button></div></div>
+        <div class="seg" id="seg-buy"><button data-v="A" class="on">Transferência bonificada</button><button data-v="B">Pontos + dinheiro</button><button data-v="C">Compra bonificada</button></div></div>
+
+      <div id="modeC" class="hidden">
+        <div class="field"><label>Quantas milhas você quer comprar</label>
+          <div class="stepper">
+            <button type="button" id="c_minus">−</button>
+            <input class="num" id="c_base" type="number" min="1000" step="1000" value="" placeholder="ex: 10000">
+            <button type="button" id="c_plus">+</button>
+          </div>
+          <div class="hint">apenas em lotes de 1.000, do jeito que os programas vendem</div></div>
+        <div class="field"><label>Bônus da promoção</label>
+          <div class="stepper">
+            <button type="button" id="c_bonus_minus">−</button>
+            <input class="num" id="c_bonus" type="number" min="0" step="10" value="" placeholder="ex: 150">
+            <button type="button" id="c_bonus_plus">+</button>
+          </div>
+          <div class="chiprow" id="c_chips" style="margin-top:8px">
+            <button type="button" data-v="50">50%</button><button type="button" data-v="100">100%</button><button type="button" data-v="150">150%</button>
+            <button type="button" data-v="200">200%</button><button type="button" data-v="300">300%</button><button type="button" data-v="400">400%</button>
+          </div>
+          <div class="hint">em porcentagem. O bônus varia por programa e por promoção, Smiles, Livelo, Latam Pass, TudoAzul ou qualquer outro. Ajuste com os botões de mais e menos, ou use um atalho como ponto de partida.</div></div>
+        <div class="field"><label>Valor total pago</label>
+          <div class="affix pre"><span class="u">R$</span><input class="num" id="c_preco" type="number" min="0" step="10" value="" placeholder="ex: 6400,00"></div>
+          <div class="hint">o valor cheio da compra, à vista ou a soma das parcelas, o que você realmente vai pagar</div></div>
+        <div class="livecalc hidden" id="c_live"></div>
+      </div>
 
       <div id="modeA">
         <div class="field"><label>Pontos a transferir</label>
@@ -164,6 +198,12 @@ footer{margin-top:26px;padding-top:14px;border-top:1px solid var(--line);color:v
         <div class="metric"><div class="t">Custo total desembolsado</div><div class="n num" id="c_custo">—</div></div>
       </div>
       <div class="verdict" id="verdictC">Preencha os campos acima para ver o custo do milheiro.</div>
+    </div>
+
+    <div class="eyebrow">Preço bom não é a resposta toda</div>
+    <div class="card">
+      <p class="note" style="margin:0">O "vale a pena" de verdade não depende só do preço de compra, depende do que você vai resgatar. Se você já tem um destino em mente, principalmente internacional ou em classe executiva, onde a passagem em dinheiro custaria uns R$ 8 a R$ 15 mil e o resgate sairia por uma fração disso em milhas, a compra se paga fácil e a diferença é grande.</p>
+      <p class="note" style="margin:12px 0 0">Se for compra especulativa, sem destino certo, o risco muda de figura: milha parada perde valor com desvalorização do programa, tem prazo de validade, e você fica exposto a mudança de regra da própria companhia. Preço bom não neutraliza esse risco, só o compensa se você usar a milha com relativa rapidez.</p>
     </div>
 
     <div class="eyebrow">Comparar com uma passagem</div>
@@ -279,6 +319,12 @@ function custoMilheiro(){
     const milhas=pontos*(1+bonus/100);const custoTotal=(pontos/1000)*custo;
     if(!(milhas>0))return null;
     return {milhas:milhas,custoTotal:custoTotal,milheiro:custoTotal/(milhas/1000)};
+  } else if(state.buy==='C'){
+    const base=val('c_base'),bonusPct=val('c_bonus'),preco=val('c_preco');
+    if(!(base>0)||bonusPct===null||preco===null)return null;
+    const milhas=base*(1+bonusPct/100);
+    if(!(milhas>0))return null;
+    return {milhas:milhas,custoTotal:preco,milheiro:preco/(milhas/1000)};
   } else {
     const milhas=val('b_milhas'),dinheiro=val('b_dinheiro'),pontosB=val('b_pontos'),custoP=val('b_custopontos');
     if(!(milhas>0)||dinheiro===null)return null;
@@ -288,6 +334,7 @@ function custoMilheiro(){
   }
 }
 function renderBuy(){
+  updateLiveC();
   const r=custoMilheiro();
   const bigC=$('bigC');
   if(!r){
@@ -337,6 +384,45 @@ function renderBuy(){
 
 function compute(){renderHave();renderBuy();}
 
+/* modo C: quantidade em lotes + chips de bônus + cálculo ao vivo */
+function updateLiveC(){
+  const live=$('c_live');
+  if(state.buy!=='C'){ live.classList.add('hidden'); return; }
+  const base=val('c_base'), bonusPct=val('c_bonus'), preco=val('c_preco');
+  if(!(base>0) || bonusPct===null){ live.classList.add('hidden'); live.innerHTML=''; return; }
+  const bonusMilhas=base*(bonusPct/100);
+  const total=base+bonusMilhas;
+  live.classList.remove('hidden');
+  let txt=`Você leva <b>${NUM(bonusMilhas)}</b> milhas bônus. Total: <b>${NUM(total)}</b> milhas.`;
+  if(preco!==null && preco>0){
+    const milheiro=preco/(total/1000);
+    txt+=`<br>Custo do milheiro: <b>${BRL(milheiro)}</b>.`;
+  }
+  live.innerHTML=txt;
+}
+$('c_minus').addEventListener('click',()=>{
+  const atual=val('c_base')||0; $('c_base').value=Math.max(1000,atual-1000); compute();
+});
+$('c_plus').addEventListener('click',()=>{
+  const atual=val('c_base')||0; $('c_base').value=atual+1000; compute();
+});
+$('c_bonus_minus').addEventListener('click',()=>{
+  const atual=val('c_bonus')||0; $('c_bonus').value=Math.max(0,atual-10); syncChipsC(); compute();
+});
+$('c_bonus_plus').addEventListener('click',()=>{
+  const atual=val('c_bonus')||0; $('c_bonus').value=atual+10; syncChipsC(); compute();
+});
+function syncChipsC(){
+  const v=($('c_bonus').value+'').trim();
+  $('c_chips').querySelectorAll('button').forEach(x=>x.classList.toggle('on', x.dataset.v===v));
+}
+$('c_chips').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
+  $('c_bonus').value=b.dataset.v;
+  syncChipsC();
+  compute();
+}));
+$('c_bonus').addEventListener('input',syncChipsC);
+
 /* toggles */
 $('seg-sit').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
   state.sit=b.dataset.v;
@@ -349,6 +435,7 @@ $('seg-buy').querySelectorAll('button').forEach(b=>b.addEventListener('click',()
   $('seg-buy').querySelectorAll('button').forEach(x=>x.classList.remove('on'));b.classList.add('on');
   $('modeA').classList.toggle('hidden',state.buy!=='A');
   $('modeB').classList.toggle('hidden',state.buy!=='B');
+  $('modeC').classList.toggle('hidden',state.buy!=='C');
   renderBuy();
 }));
 document.querySelectorAll('input').forEach(el=>el.addEventListener('input',compute));
