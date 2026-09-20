@@ -70,6 +70,9 @@ footer{margin-top:26px;padding-top:14px;border-top:1px solid var(--line);color:v
 .stepper input{text-align:center;font-size:18px;}
 .stepper button{flex:none;width:44px;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--ink);font-family:"IBM Plex Mono",monospace;font-size:18px;font-weight:600;cursor:pointer;}
 .stepper button:active{background:var(--card);}
+.stepper .affix{flex:1;position:relative;}
+.stepper .affix .u{position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-family:"IBM Plex Mono",monospace;font-size:13px;pointer-events:none;}
+.stepper .affix input{width:100%;padding-right:32px;}
 .chiprow{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:8px;}
 .chiprow button{border:1px solid var(--line);border-radius:20px;background:#fff;color:var(--ink-soft);font-family:"IBM Plex Mono",monospace;font-size:12.5px;padding:6px 12px;cursor:pointer;}
 .chiprow button.on{background:var(--ink);color:#fff;border-color:var(--ink);}
@@ -144,7 +147,7 @@ footer{margin-top:26px;padding-top:14px;border-top:1px solid var(--line);color:v
         <div class="field"><label>Bônus da promoção</label>
           <div class="stepper">
             <button type="button" id="c_bonus_minus">−</button>
-            <input class="num" id="c_bonus" type="number" min="0" step="10" value="" placeholder="ex: 150">
+            <div class="affix"><input class="num" id="c_bonus" type="number" min="0" step="10" value="" placeholder="ex: 150"><span class="u">%</span></div>
             <button type="button" id="c_bonus_plus">+</button>
           </div>
           <div class="chiprow" id="c_chips" style="margin-top:8px">
@@ -152,6 +155,15 @@ footer{margin-top:26px;padding-top:14px;border-top:1px solid var(--line);color:v
             <button type="button" data-v="200">200%</button><button type="button" data-v="300">300%</button><button type="button" data-v="400">400%</button>
           </div>
           <div class="hint">em porcentagem. O bônus varia por programa e por promoção, Smiles, Livelo, Latam Pass, TudoAzul ou qualquer outro. Ajuste com os botões de mais e menos, ou use um atalho como ponto de partida.</div></div>
+
+        <div class="field"><label>Bônus extra por categoria ou status (opcional)</label>
+          <div class="stepper">
+            <button type="button" id="c_cat_minus">−</button>
+            <div class="affix"><input class="num" id="c_cat" type="number" min="0" step="10" value="" placeholder="ex: 60"><span class="u">%</span></div>
+            <button type="button" id="c_cat_plus">+</button>
+          </div>
+          <div class="hint">alguns programas dão pontos percentuais a mais para quem já tem status ou categoria alta, por cima do bônus da promoção geral. Se o seu não tiver isso, deixe em branco.</div></div>
+
         <div class="field"><label>Valor total pago</label>
           <div class="affix pre"><span class="u">R$</span><input class="num" id="c_preco" type="number" min="0" step="10" value="" placeholder="ex: 6400,00"></div>
           <div class="hint">o valor cheio da compra, à vista ou a soma das parcelas, o que você realmente vai pagar</div></div>
@@ -159,6 +171,7 @@ footer{margin-top:26px;padding-top:14px;border-top:1px solid var(--line);color:v
       </div>
 
       <div id="modeA">
+        <p class="note" style="margin:-2px 0 12px">Esse modo serve para quando você transfere pontos de um programa de banco ou cartão, tipo Livelo, Iupp ou Esfera, para um programa aéreo, tipo Smiles, Latam Pass ou TudoAzul, numa promoção que aumenta a quantidade na hora de cair na sua conta. Não importa se você já tem os pontos ou vai comprá-los agora; o bônus é o percentual extra que a promoção de transferência está dando.</p>
         <div class="field"><label>Pontos a transferir</label>
           <div class="affix"><input class="num" id="a_pontos" type="number" min="0" step="1000" value="" placeholder="ex: 100000"><span class="u">pts</span></div></div>
         <div class="row2">
@@ -171,6 +184,7 @@ footer{margin-top:26px;padding-top:14px;border-top:1px solid var(--line);color:v
       </div>
 
       <div id="modeB" class="hidden">
+        <p class="note" style="margin:-2px 0 12px">Esse modo serve para duas situações. Primeira, resgate misto, quando você usa uma parte em pontos de outro programa e completa com dinheiro para gerar o lote de milhas. Segunda, compra direta simples, sem bônus nenhum envolvido, quando você só paga em dinheiro; nesse caso deixe os campos de pontos em branco. Se a sua compra tiver uma promoção de bônus, base mais um percentual a mais, use o modo "Compra bonificada" em vez deste.</p>
         <div class="row2">
           <div class="field"><label>Milhas do lote gerado</label>
             <div class="affix"><input class="num" id="b_milhas" type="number" min="0" step="1000" value="" placeholder="ex: 1000"><span class="u">milhas</span></div></div>
@@ -320,9 +334,10 @@ function custoMilheiro(){
     if(!(milhas>0))return null;
     return {milhas:milhas,custoTotal:custoTotal,milheiro:custoTotal/(milhas/1000)};
   } else if(state.buy==='C'){
-    const base=val('c_base'),bonusPct=val('c_bonus'),preco=val('c_preco');
+    const base=val('c_base'),bonusPct=val('c_bonus'),bonusCat=val('c_cat')||0,preco=val('c_preco');
     if(!(base>0)||bonusPct===null||preco===null)return null;
-    const milhas=base*(1+bonusPct/100);
+    const bonusTotalPct=bonusPct+bonusCat;
+    const milhas=base*(1+bonusTotalPct/100);
     if(!(milhas>0))return null;
     return {milhas:milhas,custoTotal:preco,milheiro:preco/(milhas/1000)};
   } else {
@@ -388,12 +403,15 @@ function compute(){renderHave();renderBuy();}
 function updateLiveC(){
   const live=$('c_live');
   if(state.buy!=='C'){ live.classList.add('hidden'); return; }
-  const base=val('c_base'), bonusPct=val('c_bonus'), preco=val('c_preco');
+  const base=val('c_base'), bonusPct=val('c_bonus'), bonusCat=val('c_cat')||0, preco=val('c_preco');
   if(!(base>0) || bonusPct===null){ live.classList.add('hidden'); live.innerHTML=''; return; }
-  const bonusMilhas=base*(bonusPct/100);
-  const total=base+bonusMilhas;
+  const bonusMilhasPromo=base*(bonusPct/100);
+  const bonusMilhasCat=base*(bonusCat/100);
+  const total=base+bonusMilhasPromo+bonusMilhasCat;
   live.classList.remove('hidden');
-  let txt=`Você leva <b>${NUM(bonusMilhas)}</b> milhas bônus. Total: <b>${NUM(total)}</b> milhas.`;
+  let txt=`Você leva <b>${NUM(bonusMilhasPromo)}</b> milhas de bônus da promoção`;
+  if(bonusCat>0) txt+=` + <b>${NUM(bonusMilhasCat)}</b> de bônus por categoria`;
+  txt+=`. Total: <b>${NUM(total)}</b> milhas.`;
   if(preco!==null && preco>0){
     const milheiro=preco/(total/1000);
     txt+=`<br>Custo do milheiro: <b>${BRL(milheiro)}</b>.`;
@@ -411,6 +429,12 @@ $('c_bonus_minus').addEventListener('click',()=>{
 });
 $('c_bonus_plus').addEventListener('click',()=>{
   const atual=val('c_bonus')||0; $('c_bonus').value=atual+10; syncChipsC(); compute();
+});
+$('c_cat_minus').addEventListener('click',()=>{
+  const atual=val('c_cat')||0; $('c_cat').value=Math.max(0,atual-10); compute();
+});
+$('c_cat_plus').addEventListener('click',()=>{
+  const atual=val('c_cat')||0; $('c_cat').value=atual+10; compute();
 });
 function syncChipsC(){
   const v=($('c_bonus').value+'').trim();
